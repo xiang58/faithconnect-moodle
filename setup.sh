@@ -5,7 +5,7 @@ function prompt {
   if [ $1 -eq 1 ]
   then
     echo "---> $2..."
-    sleep 1.5
+    sleep 2
   else
     echo "---> $2."
     echo
@@ -103,6 +103,7 @@ prompt 0 "MySQL restarted"
 
 # Create the Moodle database and the Moodle MySQL User with the correct permissions. Use the password you've created in step 2
 read -s -p "---> Enter the MySQL password you just created in step 2: " MYPASS
+echo
 
 # Create a new user for database
 read -p "---> Enter a new user name for database: " USER
@@ -112,6 +113,15 @@ echo
 # Set up Moodle database
 prompt 1 "Setting up Moodle database"
 sudo mysql -e "CREATE DATABASE moodle DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;CREATE USER '${USER}'@'localhost' IDENTIFIED BY '${USER_PASS}';GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,CREATE TEMPORARY TABLES,DROP,INDEX,ALTER ON moodle.* TO '${USER}'@'localhost';"
+
+if [ $? -ne 0 ]
+then
+  echo "Some error occurs. Please manually set up the database by typing the following:"
+  echo "sudo mysql -e \"CREATE DATABASE moodle DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;CREATE USER '\${USER}'@'localhost' IDENTIFIED BY '\${USER_PASS}';GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,CREATE TEMPORARY TABLES,DROP,INDEX,ALTER ON moodle.* TO '\${USER}'@'localhost';\""
+  echo "Remember to replace \${USER} and \${USER_PASS} with the actual user name and password."
+  exit 1
+fi
+
 prompt 0 "Database set up complete"
 
 ############ Step 7: Complete setup ############
@@ -119,7 +129,11 @@ prompt 0 "Database set up complete"
 # Temporarily make the webroot writable for installer to automatically add config.php
 prompt 1 "Temporarily make the webroot writable for config.php"
 sudo chmod -R 777 /var/www/html/moodle
-prompt 0 "Done."
+prompt 0 "Done"
+
+echo "---> Automatic setup complete. Now you need to open the browser and go to http://IP.ADDRESS.OF.SERVER/moodle to finish installation."
+echo "---> After you have ran the installer and you have moodle setup, you NEED to revert permissions so that it is no longer writable using the below command:"
+echo "sudo chmod -R 0755 /var/www/html/moodle"
 
 # Note: after you have ran the installer and you have moodle setup, you NEED to revert permissions so that it is no longer writable using the below command.
 # sudo chmod -R 0755 /var/www/html/moodle
