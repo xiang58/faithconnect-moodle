@@ -1,9 +1,10 @@
 #!/bin/bash
 
+############ Utils ############
+
 # Function to display prompts
 function prompt {
-  if [ $1 -eq 1 ]
-  then
+  if [ $1 -eq 1 ]; then
     echo "---> $2..."
     sleep 2
   else
@@ -37,8 +38,8 @@ prompt 1 "Installing required tech stack (LAMP)"
 sudo apt install apache2 mysql-client mysql-server php libapache2-mod-php
 prompt 0 "Required tech stack installed"
 
-# Setting up MySQL root password. Make sure to jot down your password, you'll need it later
-prompt 1 "Setting up MySQL root passsword"
+# Setting up MySQL root password. Make sure to jot down your password, you may need it later
+prompt 1 "Running mysql_secure_installation"
 sudo mysql_secure_installation
 prompt 0 "mysql_secure_installation setup complete"
 
@@ -71,6 +72,12 @@ prompt 1 "Below list are all the available versions"
 sudo git branch -a
 read -p "---> Please indicate which version you'd like to use: " MY_BRANCH
 sudo git branch --track ${MY_BRANCH} origin/${MY_BRANCH}
+
+while [ $? -ne 0 ]; do
+  read -p "Please enter a valid branch name: " MY_BRANCH
+  sudo git branch --track ${MY_BRANCH} origin/${MY_BRANCH}
+done
+
 sudo git checkout ${MY_BRANCH}
 prompt 0 "Moodle version selected"
 
@@ -101,28 +108,35 @@ prompt 1 "Restarting MySQL"
 sudo service mysql restart
 prompt 0 "MySQL restarted"
 
-# Create the Moodle database and the Moodle MySQL User with the correct permissions. Use the password you've created in step 2
-read -s -p "---> Enter the MySQL password you just created in step 2: " MYPASS
-echo
+# Set up Moodle database
+prompt 1 "Creating database for Moodle"
+sudo mysql -e "CREATE DATABASE moodle DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+prompt 0 "Database created"
 
 # Create a new user for database
 read -p "---> Enter a new user name for database: " USER
+while [ -z $USER ]; do
+  read -p "---> User name cannot be empty. Please re-enter: " USER
+done
+
 read -s -p "---> Enter a password for this user: (must comply with the MySQL password policy you set up earlier)" USER_PASS
+while [ -z $USER_PASS ]; do
+  read -p "---> Password cannot be empty. Please re-enter: " USER_PASS
+done
 echo
 
-# Set up Moodle database
-prompt 1 "Setting up Moodle database"
-sudo mysql -e "CREATE DATABASE moodle DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;CREATE USER '${USER}'@'localhost' IDENTIFIED BY '${USER_PASS}';GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,CREATE TEMPORARY TABLES,DROP,INDEX,ALTER ON moodle.* TO '${USER}'@'localhost';"
+prompt 1 "Creating a new user"
+sudo mysql -e "CREATE USER '${USER}'@'localhost' IDENTIFIED BY '${USER_PASS}';"
+while [ $? -ne 0 ]; do
+  echo "---> Looks like some error occurs. Most likely, the password you just entered doesn't comply with the policy that you set up during mysql_secure_installation."
+  read -s -p "---> Please re-enter a valid password and try again (You can type [mysql -e \"SHOW VARIABLES LIKE 'validate_password%';\"] to check your password policy. If you still have trouble, hit ^C to quit and set up your database manually.) " USER_PASS
+  sudo mysql -e "CREATE USER '${USER}'@'localhost' IDENTIFIED BY '${USER_PASS}';"
+done
+prompt 0 "New user created"
 
-if [ $? -ne 0 ]
-then
-  echo "Some error occurs. Please manually set up the database by typing the following:"
-  echo "sudo mysql -e \"CREATE DATABASE moodle DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;CREATE USER '\${USER}'@'localhost' IDENTIFIED BY '\${USER_PASS}';GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,CREATE TEMPORARY TABLES,DROP,INDEX,ALTER ON moodle.* TO '\${USER}'@'localhost';\""
-  echo "Remember to replace \${USER} and \${USER_PASS} with the actual user name and password."
-  exit 1
-fi
-
-prompt 0 "Database set up complete"
+prompt 1 "Grant privilege to new user"
+sudo mysql -e "GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,CREATE TEMPORARY TABLES,DROP,INDEX,ALTER ON moodle.* TO '${USER}'@'localhost';"
+prompt 0 "New user privilege granted"
 
 ############ Step 7: Complete setup ############
 
@@ -135,9 +149,6 @@ echo "---> Automatic setup complete. Now you need to open the browser and go to 
 echo "---> After you have ran the installer and you have moodle setup, you NEED to revert permissions so that it is no longer writable, using the below command:"
 echo "sudo chmod -R 0755 /var/www/html/moodle"
 echo "---> If you have any further questions please refer to https://docs.moodle.org/310/en/Step-by-step_Installation_Guide_for_Ubuntu for step-by-step setup guide."
-
-# Note: after you have ran the installer and you have moodle setup, you NEED to revert permissions so that it is no longer writable using the below command.
-# sudo chmod -R 0755 /var/www/html/moodle
 
 # Open your browser and go to http://IP.ADDRESS.OF.SERVER/moodle and follow the prompts to install Moodle
 # 1. Change the path for moodledata: /var/moodledata
