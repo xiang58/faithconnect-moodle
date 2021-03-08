@@ -72,11 +72,11 @@ prompt 0 'Moodle downloaded'
 # Retrieve a list of each branch available and prompt user to select branch
 prompt 1 'Below list are all the available versions'
 sudo git branch -a
-read -p "---> Please indicate which version you'd like to use: " MY_BRANCH
+read -ep "---> Please indicate which version you'd like to use: " MY_BRANCH
 sudo git branch --track ${MY_BRANCH} origin/${MY_BRANCH}
 
 while [ $? -ne 0 ]; do
-  read -p 'Please enter a valid branch name: ' MY_BRANCH
+  read -ep 'Please enter a valid branch name: ' MY_BRANCH
   sudo git branch --track ${MY_BRANCH} origin/${MY_BRANCH}
 done
 
@@ -116,16 +116,16 @@ sudo mysql -e 'CREATE DATABASE moodle DEFAULT CHARACTER SET utf8mb4 COLLATE utf8
 prompt 0 'Database created'
 
 # Create a new user for database
-read -p '---> Enter a new user name for database: ' USER
+read -ep '---> Enter a new user name for database: ' USER
 while [ -z $USER ]; do
-  read -p '---> User name cannot be empty. Please re-enter: ' USER
+  read -ep '---> User name cannot be empty. Please re-enter: ' USER
 done
 
 echo "---> The password policy you've set up:"
 mysql -e "SHOW VARIABLES LIKE 'validate_password%';"
-read -s -p "---> Enter a password for this user: (must comply with the password policy shown above, or you'll mostly likely get an error in next step) " USER_PASS
+read -sp "---> Enter a password for this user: (must comply with the password policy shown above, or you'll mostly likely get an error in next step) " USER_PASS
 while [ -z $USER_PASS ]; do
-  read -p "\n---> Password cannot be empty. Please re-enter: " USER_PASS
+  read -sp "\n---> Password cannot be empty. Please re-enter: " USER_PASS
 done
 echo
 
@@ -133,7 +133,7 @@ prompt 1 'Creating a new user'
 sudo mysql -e "CREATE USER '${USER}'@'localhost' IDENTIFIED BY '${USER_PASS}';"
 while [ $? -ne 0 ]; do
   echo "---> Looks like some error occurs. Most likely, the password you just entered doesn't comply with the policy that you set up during mysql_secure_installation."
-  read -s -p '---> Please re-enter a valid password and try again (If you still have trouble, hit ^C to quit and set up your database manually.) ' USER_PASS
+  read -sp '---> Please re-enter a valid password and try again (If you still have trouble, hit ^C to quit and set up your database manually.) ' USER_PASS
   echo
   sudo mysql -e "CREATE USER '${USER}'@'localhost' IDENTIFIED BY '${USER_PASS}';"
 done
