@@ -123,7 +123,7 @@ echo "---> The password policy you've set up:"
 mysql -e "SHOW VARIABLES LIKE 'validate_password%';"
 read -s -p "---> Enter a password for this user: (must comply with the password policy shown above, or you'll mostly likely get an error in next step) " USER_PASS
 while [ -z $USER_PASS ]; do
-  read -p '---> Password cannot be empty. Please re-enter: ' USER_PASS
+  read -p "\n---> Password cannot be empty. Please re-enter: " USER_PASS
 done
 echo
 
@@ -132,6 +132,7 @@ sudo mysql -e "CREATE USER '${USER}'@'localhost' IDENTIFIED BY '${USER_PASS}';"
 while [ $? -ne 0 ]; do
   echo "---> Looks like some error occurs. Most likely, the password you just entered doesn't comply with the policy that you set up during mysql_secure_installation."
   read -s -p '---> Please re-enter a valid password and try again (If you still have trouble, hit ^C to quit and set up your database manually.) ' USER_PASS
+  echo
   sudo mysql -e "CREATE USER '${USER}'@'localhost' IDENTIFIED BY '${USER_PASS}';"
 done
 prompt 0 'New user created'
