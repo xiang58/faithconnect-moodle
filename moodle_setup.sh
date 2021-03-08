@@ -87,7 +87,9 @@ prompt 0 'Moodle version selected'
 
 prompt 1 'Copying Moodle to webroot folder'
 sudo cp -R /opt/moodle /var/www/html/
-sudo mkdir /var/moodledata
+if [ ! -d /var/moodledata ]; then
+  sudo mkdir /var/moodledata
+fi
 sudo chown -R www-data /var/moodledata
 sudo chmod -R 777 /var/moodledata
 sudo chmod -R 0755 /var/www/html/moodle
@@ -112,7 +114,7 @@ prompt 0 'MySQL restarted'
 
 # Set up Moodle database
 prompt 1 'Creating database for Moodle'
-sudo mysql -e 'CREATE DATABASE moodle DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'
+sudo mysql -e 'CREATE DATABASE IF NOT EXISTS moodle DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'
 prompt 0 'Database created'
 
 # Create a new user for database
