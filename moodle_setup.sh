@@ -5,10 +5,10 @@
 # Function to display prompts
 function prompt {
   if [ $1 -eq 1 ]; then
-    echo '---> $2...'
+    echo "---> $2..."
     sleep 2
   else
-    echo '---> $2.'
+    echo "---> $2."
     echo
   fi
 }
@@ -131,7 +131,7 @@ prompt 1 'Creating a new user'
 sudo mysql -e "CREATE USER '${USER}'@'localhost' IDENTIFIED BY '${USER_PASS}';"
 while [ $? -ne 0 ]; do
   echo "---> Looks like some error occurs. Most likely, the password you just entered doesn't comply with the policy that you set up during mysql_secure_installation."
-  read -s -p "---> Please re-enter a valid password and try again (If you still have trouble, hit ^C to quit and set up your database manually.) " USER_PASS
+  read -s -p '---> Please re-enter a valid password and try again (If you still have trouble, hit ^C to quit and set up your database manually.) ' USER_PASS
   sudo mysql -e "CREATE USER '${USER}'@'localhost' IDENTIFIED BY '${USER_PASS}';"
 done
 prompt 0 'New user created'
