@@ -63,7 +63,9 @@ prompt 0 'Git installed'
 
 prompt 1 'Downloading Moodle'
 cd /opt
-sudo git clone git://git.moodle.org/moodle.git
+if [ ! -d moodle ]; then
+  sudo git clone git://git.moodle.org/moodle.git
+fi
 cd moodle
 prompt 0 'Moodle downloaded'
 
